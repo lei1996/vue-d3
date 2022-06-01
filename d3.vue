@@ -34,7 +34,11 @@ export default Vue.extend({
       allData: {
         name: "多多包",
         children: [
-          { name: "一卡通公司一卡通公司一卡通公司一卡通公司一卡通公司一卡通公司", type: 0, num: 7.89 },
+          {
+            name: "一卡通公司一卡通公司一卡通公司一卡通公司一卡通公司一卡通公司",
+            type: 0,
+            num: 7.89,
+          },
           {
             name: "一卡通公司2",
             type: 0,
@@ -101,6 +105,8 @@ export default Vue.extend({
             name: "大公司大公司大公司大公司大公司大公司大公司大公司大公司大公司",
             num: 98,
             type: 0,
+            aaaid:"1222312",
+            code:"coddddddde",
             children: [
               {
                 name: "发发委",
@@ -331,7 +337,7 @@ export default Vue.extend({
         .attr("style", "position: relative;z-index: 2;")
         .append("g")
         .attr("id", "g")
-        .attr("transform", "translate(" + svgW / 2 + "," + svgH / 2 + ")")
+        .attr("transform", "translate(" + svgW / 2 + "," + svgH / 2 + ")");
       this.dataInit(this.tree, 1);
       this.dataInit(this.allData, 2);
     },
@@ -386,8 +392,7 @@ export default Vue.extend({
               : 1
             : 1
         ); // 拥有下部分则隐藏初始块
-
-      // // 创建矩形1
+      // 创建矩形1
       nodeEnter
         .append("rect")
         .attr("type", "rectangle")
@@ -415,9 +420,6 @@ export default Vue.extend({
       nodeEnter
         .append("text")
         .attr("type", "rectangletext")
-        .attr("x", (d) => {
-          return d.depth === 1 ? -50 / 4 : -this.originDiamonds.w / 2;
-        })
         .attr("y", (d) =>
           d.depth === 1
             ? showtype === "up"
@@ -425,6 +427,7 @@ export default Vue.extend({
               : -this.diamonds.h / 2 - 14 / 2
             : 0
         )
+        .attr("text-anchor", (d) => (d.depth ? "middle" : ""))
         .attr("fill", (d) => (d.depth === 1 ? "#008EDA" : "#fff"))
         .style("font-size", "10px")
         .style("font-family", "PingFangSC-Medium")
@@ -446,7 +449,6 @@ export default Vue.extend({
         .append("stop")
         .attr("offset", "100%")
         .style("stop-color", b.toString());
-
       // 创建矩形2
       nodeEnter
         .append("rect")
@@ -467,6 +469,10 @@ export default Vue.extend({
         )
         .attr("rx", (d) => (d.depth ? 10 : 22))
         .attr("ry", (d) => (d.depth ? 10 : 22))
+        .on("click", function (event, d) {
+          _this.$router.push(`/company/snapshot?aaaid=${d.data.aaaid}&code=${d.data.code}`)
+        })
+        .style("cursor", "pointer")
         .style("fill", (d) => {
           if (d.depth === 0) {
             return "url(#" + linerGradient.attr("id") + ")";
@@ -543,40 +549,39 @@ export default Vue.extend({
         .style("display", (d) => (d.data.others ? "block" : "none"))
         .attr("fill", "#EBF8FF") // 填充颜色
         .on("click", function (event, d) {
-          console.log(d, "右侧圆的点击时间");
+          console.log(d, "右侧圆的点击事件");
           _this.showAll = !_this.showAll;
           _this.click(d, showtype, sourceTree);
-          setTimeout(() => {
-            if (
-              document.querySelector(`text[type="${d.id}"]`).innerHTML === "-"
-            ) {
-              d.isOpen = false;
-              document.querySelector(`text[type="${d.id}"]`).innerHTML = "+";
-            } else {
-              d.isOpen = true;
-              document.querySelector(`text[type="${d.id}"]`).innerHTML = "-";
-            }
-          }, DURATION);
         });
 
       // 公司名称
       // y轴 否表源头的字体距离
       nodeEnter
         .append("text")
-        .attr("x", (d)=> {
-          if(d.depth) {
-           return -this.diamonds.w / 2 + 10
+        .attr("x", (d) => {
+          if (d.depth) {
+            if (d.data.others === 1) {
+              return -14;
+            }
+            return -this.diamonds.w / 2 + 10;
           }
         })
         .attr("y", (d) => {
           if (d.depth) {
             if (showtype === "up") {
-              return -this.diamonds.h / 2 + 5 ;
+              return -this.diamonds.h / 2 + 5;
             } else {
-              return -this.diamonds.h / 2 + 10 ;
+              if (d.data.others === 1) {
+                return -10;
+              }
+              return -this.diamonds.h / 2 + 10;
             }
-          } 
+          }
         })
+        .on("click", function (event, d) {
+          _this.$router.push(`/company/snapshot?aaaid=${d.data.aaaid}&code=${d.data.code}`)
+        })
+        .style("cursor", "pointer")
         .attr("dy", (d) =>
           d.depth ? (d.data.name.length > 12 ? "1.5em" : "2em") : ".3em"
         )
@@ -584,7 +589,7 @@ export default Vue.extend({
         .text((d) =>
           d.data.name.length > 12 ? d.data.name.substr(0, 12) : d.data.name
         )
-        .attr("text-anchor", (d) => d.depth? '':"middle")
+        .attr("text-anchor", (d) => (d.depth ? "" : "middle"))
         .style("font-size", (d) => (d.depth === 0 ? "18px" : "10px"))
         .style("font-family", (d) =>
           d.depth === 0
@@ -600,12 +605,16 @@ export default Vue.extend({
         .attr("y", (d) => {
           if (d.depth) {
             if (showtype === "up") {
-              return -this.diamonds.h / 2 + 5 ;
+              return -this.diamonds.h / 2 + 5;
             } else {
-              return -this.diamonds.h / 2 + 10 ;
+              return -this.diamonds.h / 2 + 10;
             }
           }
         })
+        .on("click", function (event, d) {
+          _this.$router.push(`/company/snapshot?aaaid=${d.data.aaaid}&code=${d.data.code}`)
+        })
+        .style("cursor", "pointer")
         .attr("dy", (d) => (d.depth ? "3em" : ".3em"))
         .attr("fill", (d) => (d.depth ? "#172434" : "#fff"))
         .text((d) => {
@@ -627,17 +636,24 @@ export default Vue.extend({
         .attr("y", (d) => {
           if (d.depth) {
             if (showtype === "up") {
-              return -this.diamonds.h / 2 + 5 ;
+              return -this.diamonds.h / 2 + 5;
             } else {
-              return -this.diamonds.h / 2 + 10 ;
+              return -this.diamonds.h / 2 + 10;
             }
           }
         })
+        .on("click", function (event, d) {
+          _this.$router.push(`/company/snapshot?aaaid=${d.data.aaaid}&code=${d.data.code}`)
+        })
+        .style("cursor", "pointer")
+        .attr("display", (d) =>
+          d.depth && d.data.others !== 1 ? "block" : "none"
+        )
         .attr("dy", "4.5em")
         .attr("fill", (d) => (d.depth ? "#838D99" : "#fff"))
         .text("Subscribed amount：")
         .style("font-size", "10px")
-        .style("font-family", "PingFangSC-Regular, PingFang SC")
+        .style("font-family", "PingFangSC-Regular, PingFang SC");
 
       // 金额
       nodeEnter
@@ -646,12 +662,19 @@ export default Vue.extend({
         .attr("y", (d) => {
           if (d.depth) {
             if (showtype === "up") {
-              return -this.diamonds.h / 2 + 5 ;
+              return -this.diamonds.h / 2 + 5;
             } else {
-              return -this.diamonds.h / 2 + 10 ;
+              return -this.diamonds.h / 2 + 10;
             }
           }
         })
+        .on("click", function (event, d) {
+          _this.$router.push(`/company/snapshot?aaaid=${d.data.aaaid}&code=${d.data.code}`)
+        })
+        .style("cursor", "pointer")
+        .attr("display", (d) =>
+          d.depth && d.data.others !== 1 ? "block" : "none"
+        )
         .attr("dy", "6.2em")
         .attr("fill", (d) => (d.depth ? "#008EDA" : "#fff"))
         .text("$517,030.00")
@@ -692,7 +715,6 @@ export default Vue.extend({
               this.innerHTML = "-";
               this.setAttribute("fill", "#008EDA");
               // circle 圆形
-              console.log(d, "zheli报错了");
               document
                 .querySelector(`circle[type="${d.id}"]`)
                 .setAttribute("fill", "#EBF8FF");
@@ -734,25 +756,10 @@ export default Vue.extend({
               d.isOpen = false;
               this.innerHTML = "+";
               this.setAttribute("fill", "#008EDA");
-              document
-                .querySelector(`circle[type="${d.id}"]`)
-                .setAttribute("fill", "#EBF8FF");
-              document
-                .querySelector(`rect[type="${d.id}"]`)
-                .setAttribute("style", "fill:#F2F4F9");
             } else {
               d.isOpen = true;
               this.innerHTML = "-";
               this.setAttribute("fill", "#008EDA");
-              // circle 圆形
-              console.log(d, "zheli报错了");
-              document
-                .querySelector(`circle[type="${d.id}"]`)
-                .setAttribute("fill", "#EBF8FF");
-              // rect 矩形
-              document
-                .querySelector(`rect[type="${d.id}"]`)
-                .setAttribute("style", "fill:#F2F4F9");
             }
           }, DURATION);
         })
@@ -866,23 +873,6 @@ export default Vue.extend({
         this.hasChildNodeArr.push(source);
       }
     },
-    // closeChid(val) {
-    //   let arr = []
-    //   let arrFun = (data) => {
-    //     data.map((item, index)=> {
-    //       if (item.isOpen) {
-    //         item.isOpen = false
-    //       }
-    //       if (item.data && item.data.children && item.data.children.length) {
-    //         arrFun(item.data.children)
-    //       } else {
-    //         arr.push(item)
-    //       }
-    //     })
-    //   }
-    //   arrFun(val)
-    //   return arr
-    // },
     click(source, showType, sourceTree, showChild = false) {
       // 不是起点才能点
       if (source.depth) {
@@ -893,6 +883,7 @@ export default Vue.extend({
         ) {
           this.alltreeArr.map((item) => {
             if (item.type === "down") {
+              item.data.children.forEach(this.collapse);
               this.update(item.data, showType, item.data);
             }
           });
@@ -902,6 +893,7 @@ export default Vue.extend({
           // 点击 收起同级 则进行数据替换
           this.treeArr.map((item) => {
             if (item.type === "down") {
+              item.data.children.forEach(this.collapse);
               this.update(item.data, showType, item.data);
             }
           });
@@ -972,7 +964,7 @@ export default Vue.extend({
             } 
             M${s.x === 0 ? s.x : s.x > d.x ? s.x - 20 : s.x + 20} ${d.y + 50}
             ${d.x} ${depth === 1 ? 50 : d.y}
-            ${d.x} ${d.y}`;
+            L${d.x} ${d.y}`;
         } else {
           path = `M${s.x} ${s.y}
           ${s.x} ${s.y - 55}
